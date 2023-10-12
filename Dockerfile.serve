@@ -4,16 +4,19 @@ WORKDIR /tmp/kam
 COPY . .
 RUN make all_platforms && \
     make checksum && \
-    go build -o /tmp/kamserve tools/kam-serve/main.go && \
+    CGO_ENABLED=0 go build -o /tmp/kamserve tools/kam-serve/main.go && \
     mkdir -p /tmp/workdir/kam-root/kam && \
     cp config/index.html /tmp/workdir/kam-root/index.html && \
     mv /tmp/kam/dist/* /tmp/workdir/kam-root/kam/
 
 
-FROM ubuntu
+FROM scratch
 
 # Add application sources
 COPY --from=builder /tmp/workdir/ /tmp/
 COPY --from=builder /tmp/kamserve /
+
+EXPOSE 9000
+
 # The run script uses standard ways to run the application
-ENTRYPOINT ["/kamserve"]
+ENTRYPOINT ["./kamserve"]
